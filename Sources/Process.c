@@ -306,7 +306,6 @@ static LDD_TError SplitRawData(void)
 
         loffStatP  = ((byte)(tADCPtr[adcNum]->adcData.rawData[0] & 0x0F) << 4) & 0xF0;
         loffStatP |= ((byte)(tADCPtr[adcNum]->adcData.rawData[1] & 0xF0) >> 4) & 0x0F;
-
         loffStatN  = ((byte)(tADCPtr[adcNum]->adcData.rawData[1] & 0x0F) << 4) & 0xF0;
         loffStatN |= ((byte)(tADCPtr[adcNum]->adcData.rawData[2] & 0xF0) >> 4) & 0x0F;
 
@@ -316,7 +315,15 @@ static LDD_TError SplitRawData(void)
         {
             channelData = ((int16)tADCPtr[adcNum]->adcData.rawData[RAW_DATA_HEAD_SIZE + i] << 8) & 0xFF00;
             channelData |= (int16)tADCPtr[adcNum]->adcData.rawData[RAW_DATA_HEAD_SIZE + i + 1] & 0x00FF;
-            tADCPtr[adcNum]->adcData.channelData[i / 2] = (int16)channelData;
+            if(eADC0 == adcNum)
+            {
+                //According to the hardware, the data from the 1st ADC should be reversed.
+                tADCPtr[adcNum]->adcData.channelData[USING_CHANNEL_COUNT - (i / 2) - 1] = (channelData == 0x8000) ? 0x7FFF : (int16)(-channelData);
+            }
+            else if(eADC1 == adcNum)
+            {
+                tADCPtr[adcNum]->adcData.channelData[i / 2] = (int16)channelData;
+            }
         }
 
         tADCPtr[adcNum]->adcData.head = (byte)head;
@@ -425,12 +432,11 @@ static void PackData(void)
     {
         for(int channelNum = 0;  channelNum < USING_CHANNEL_COUNT; channelNum++)
         {
-            off = 8 /* Head Bits in a pack, eg. 0xB7, MCU No., etc. */
+            off = DATA_FRAME_HEAD_SIZE /* Head Bits in a pack, eg. 0xB7, MCU No., etc. */
                     + USING_CHANNEL_COUNT * CHANNEL_PACKAGE_LENGTH * adcNum  /* The ADC0's data is in the front of ADC1's data. */
                         + 3 * (channelNum + 1)  /* Every channel's data pack has a head of 3 bits. */
                             + CHANNEL_DATA_COUNT * 2 * channelNum   /* every channel's data is 200 bits apart of the 3-bit head. */
                                 + chDataCnt * 2;   /* every channel's data at one time is 2 bits. */
-
             tARMPtr->backBuffer[off] = tMCUPtr->mcuData.channelData[adcNum][channelNum][chDataCnt] >> 8 & 0xFFU;
             tARMPtr->backBuffer[off + 1] = tMCUPtr->mcuData.channelData[adcNum][channelNum][chDataCnt] & 0xFFU;
         }
@@ -448,6 +454,7 @@ static void PackData(void)
     {
 //        tARMPtr->armStatus.isBackBufferEmpty = FALSE;
 //        tARMPtr->armStatus.isBackBufferFull = FALSE;
+
         tARMPtr->armStatus.backBufferStatus = eWrite;
     }
 }
@@ -509,8 +516,42 @@ void SwapARMDataBuffer(void)
             tARMPtr->foreBuffer[7] = 0x00U;
             break;
         case eWrite:
-            tARMPtr->foreBuffer[7] = CHANNEL_DATA_COUNT - chDataCnt;
+        {
+            int remainNum;
+            remainNum = CHANNEL_DATA_COUNT - chDataCnt;
+            tARMPtr->foreBuffer[7] = remainNum;
+            //Fill the remaining position as the last value in the array.
+            int off;
+            for(int i = 0; i < USING_ADC_COUNT * USING_CHANNEL_COUNT; i++)
+            {
+                for(int j = 0; j < remainNum; j++)
+                {
+                    off = 210 + 203 * i - (remainNum - j) * 2;
+                    tARMPtr->backBuffer[off] = tARMPtr->backBuffer[off - 2];
+                    tARMPtr->backBuffer[off + 1] = tARMPtr->backBuffer[off - 1];
+                }
+            }
+//            for(int i = 0; i < CHANNEL_DATA_COUNT; i++)
+//            {
+//                for(int adcNum = 0; adcNum < USING_ADC_COUNT; adcNum++)
+//                {
+//                    for(int channelNum = 0;  channelNum < USING_CHANNEL_COUNT; channelNum++)
+//                    {
+//                        for(int j = 0; j < remainNum; j++)
+//                        {
+//                            off = DATA_FRAME_HEAD_SIZE /* Head Bits in a pack, eg. 0xB7, MCU No., etc. */
+//                                    + USING_CHANNEL_COUNT * CHANNEL_PACKAGE_LENGTH * adcNum  /* The ADC0's data is in the front of ADC1's data. */
+//                                        + 3 * (channelNum + 1)  /* Every channel's data pack has a head of 3 bits. */
+//                                            + CHANNEL_DATA_COUNT * 2 * channelNum   /* every channel's data is 200 bits apart of the 3-bit head. */
+//                                                + (chDataCnt + j) * 2;   /* every channel's data at one time is 2 bits. */
+//                            tARMPtr->backBuffer[off] = tARMPtr->backBuffer[off - 2];
+//                            tARMPtr->backBuffer[off + 1] = tARMPtr->backBuffer[off - 1];
+//                        }
+//                    }
+//                }
+//            }
             break;
+        }
         case eRead:
             break;
         case eEmpty:

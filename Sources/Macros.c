@@ -123,6 +123,8 @@ const byte CHANNEL_PACKAGE_HEAD_BIT = 0x11;                                /*!< 
    ---------------------------------------------------------------------------------------------------------------------------------
    @endverbatim
  */
+const uint8 DATA_FRAME_HEAD_SIZE = 8U;                                     /*!< The size of the head of data frame. */
+const uint8 DATA_FRAME_TAIL_SIZE = 1U;                                     /*!< The size of the tail of data frame. */
 const byte DATA_FRAME_HEAD_BIT = 0xB7;                                     /*!< The head bit of data frame. */
 const byte DATA_FRAME_TAIL_BIT = 0xED;                                     /*!< The tail bit of data frame. */
     /*!

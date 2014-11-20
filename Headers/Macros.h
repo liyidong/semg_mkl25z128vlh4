@@ -134,9 +134,9 @@ extern const byte CHANNEL_PACKAGE_HEAD_BIT;                    /*!< The head bit
  * The length of data frame.
  *
    @verbatim
-   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   |0xb7|MCU_NUMBER|channel_package_length_high|channel_package_length_low|time_stamp_high|time_stamp_low|status_high_|status_low|channel_package*USING_CHANNEL_COUNT*USING_ADC_COUNT|0xed|
-   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   |0xb7|MCU_NUMBER|channel_package_length_high|channel_package_length_low|time_stamp_high|time_stamp_low|status_high|status_low|channel_package*USING_CHANNEL_COUNT*USING_ADC_COUNT|0xed|
+   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    MCU_NUMBER: 0-7
    status_high: [7] - x
                 [6] - x
@@ -151,6 +151,8 @@ extern const byte CHANNEL_PACKAGE_HEAD_BIT;                    /*!< The head bit
 #elif USING_ADC_COUNT == 2U
 #define DATA_FRAME_LENGTH 3257                                 /*!< The length of a data frame when using 2 ADC. */
 #endif /* #if USING_ADC_COUNT == 1U */
+extern const uint8 DATA_FRAME_HEAD_SIZE;                       /*!< The size of the head of data frame. */
+extern const uint8 DATA_FRAME_TAIL_SIZE;                       /*!< The size of the tail of data frame. */
 extern const byte DATA_FRAME_HEAD_BIT;                         /*!< The head bit of data frame. */
 extern const byte DATA_FRAME_TAIL_BIT;                         /*!< The tail bit of data frame. */
     /*!

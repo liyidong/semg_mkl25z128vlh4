@@ -170,7 +170,7 @@ LDD_TError ADCConfigure(EADCFlag adcFlag)
 {
     //LDD_TError err;
     byte cmd;
-    byte regVal[25] = {0};
+    byte regVal[28] = {0};  //26 registers and 2 dummy bytes.
 
     /* Stop Data Continuous mode. */
     cmd = ADC_CMD_SDATAC;
@@ -180,7 +180,7 @@ LDD_TError ADCConfigure(EADCFlag adcFlag)
     tMCUPtr->mcuStatus.isSPI0RxDMATransCompleted = FALSE;
     DelaySomeMs(1);
 
-//    /* Read ADC ID, should be 0xB6. */
+    /* Read ADC ID, should be 0xB6. */
 //    cmd = ADC_REG_ID;
 //    EnableADCSPI(adcFlag);      /* Select corresponding ADC. */
 //    ADCReadRegister(cmd, regVal, 1);
@@ -195,9 +195,10 @@ LDD_TError ADCConfigure(EADCFlag adcFlag)
 //    if(0xB6 != regVal[2])
 //    {
 //        /* Do something. */
+//        for(;;);
 //    }
 
-    for(int i = 0; i < 25; i++)
+    for(int i = 0; i < 28; i++)
     {
         regVal[i] = 0xFF;
     }
@@ -217,14 +218,14 @@ LDD_TError ADCConfigure(EADCFlag adcFlag)
     regVal[2] = 0x80U;  /* CONFIG3 10001100*/
     regVal[3] = 0x00U;  /* LOFF */
 #if TEST_ADC == 0
-    regVal[4] = 0x10U;  /* CH1SET */
-    regVal[5] = 0x10U;  /* CH2SET */
-    regVal[6] = 0x10U;  /* CH3SET */
-    regVal[7] = 0x10U;  /* CH4SET */
-    regVal[8] = 0x10U;  /* CH5SET */
-    regVal[9] = 0x10U;  /* CH6SET */
-    regVal[10] = 0x10U; /* CH7SET */
-    regVal[11] = 0x10U; /* CH8SET */
+    regVal[4] = 0x40U;  /* CH1SET */
+    regVal[5] = 0x40U;  /* CH2SET */
+    regVal[6] = 0x40U;  /* CH3SET */
+    regVal[7] = 0x40U;  /* CH4SET */
+    regVal[8] = 0x40U;  /* CH5SET */
+    regVal[9] = 0x40U;  /* CH6SET */
+    regVal[10] = 0x40U; /* CH7SET */
+    regVal[11] = 0x40U; /* CH8SET */
 #elif TEST_ADC == 1
     regVal[4] = 0x01U;  /* CH1SET, short input */
     regVal[5] = 0x01U;  /* CH2SET, short input */
@@ -255,17 +256,19 @@ LDD_TError ADCConfigure(EADCFlag adcFlag)
     tMCUPtr->mcuStatus.isSPI0RxDMATransCompleted = FALSE;
     DelaySomeMs(1);
     DisableADCSPI(adcFlag);         /* De-select ADC. */
-//    for(int i = 0; i < 25; i++)
-//    {
-//        regVal[i] = 0xFF;
-//    }
-//
-//    EnableADCSPI(adcFlag);
-//    ADCReadRegister(cmd, regVal, 25);
-//    while(!tMCUPtr->mcuStatus.isSPI0RxDMATransCompleted || !tMCUPtr->mcuStatus.isSPI0TxDMATransCompleted);
-//    tMCUPtr->mcuStatus.isSPI0TxDMATransCompleted = FALSE;
-//    tMCUPtr->mcuStatus.isSPI0RxDMATransCompleted = FALSE;
-//    DisableADCSPI(adcFlag);
+
+    for(int i = 0; i < 28; i++)
+    {
+        regVal[i] = 0xFF;
+    }
+
+    EnableADCSPI(adcFlag);
+    ADCReadRegister(cmd, regVal, 25);
+    while(!tMCUPtr->mcuStatus.isSPI0RxDMATransCompleted || !tMCUPtr->mcuStatus.isSPI0TxDMATransCompleted);
+    tMCUPtr->mcuStatus.isSPI0TxDMATransCompleted = FALSE;
+    tMCUPtr->mcuStatus.isSPI0RxDMATransCompleted = FALSE;
+    DisableADCSPI(adcFlag);
+
 //    for(;;);
 //#if DEBUG
 //    DelaySomeMs(100);
@@ -274,7 +277,7 @@ LDD_TError ADCConfigure(EADCFlag adcFlag)
 //                                                                   regVal[0], regVal[0], regVal[0], regVal[0],
 //                                                                   regVal[0], regVal[0], regVal[0], regVal[0]);
 //#endif
-//    for(int i = 0; i < 25; i++)
+//    for(int i = 0; i < 28; i++)
 //    {
 //        regVal[i] = 0xFF;
 //    }

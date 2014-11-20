@@ -50,7 +50,7 @@
 #include "DMAT_S_SPI_TX.h"
 #include "DMAT_S_SPI_RX.h"
 #include "BitIO_AD_NOT_CS1.h"
-//#include "BitIO_AD_NOT_RESET1.h"
+#include "BitIO_AD_NOT_RESET1.h"
 #include "PE_Types.h"
 #include "PE_Error.h"
 #include "PE_Const.h"
